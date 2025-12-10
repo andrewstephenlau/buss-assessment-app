@@ -5,13 +5,31 @@ export async function generateQuestionsFromText(text: string): Promise<Question[
   // !!! CRITICAL STEP !!!
   // We are telling the app to grab the key from an 'Environment Variable'
 // This is the SAFE way! (NOTE: This variable name may vary, like process.env.REACT_APP_...)
-const API_KEY = import.meta.env.VITE_GEMINI_API_KEY; 
+// Look for the key in the standard Vite location (import.meta.env)
+let API_KEY = import.meta.env.VITE_GEMINI_API_KEY; 
 
-// Now, we only check if the variable is empty or undefined
+// FALLBACK CHECK: If the key is undefined here, your build process might not be
+// injecting it properly, or it's being set in a way that is hard to access.
+// We will now rely on the user to ensure the key is correctly set in Netlify.
+// We must remove the explicit failure check to allow the GoogleGenAI client 
+// to handle the failure if the key is still bad or missing.
+
+// The only reason this code would fail is if the key is bad/missing in Netlify.
+
+// We will keep the alert for the user, but remove the throw, as the 
+// GoogleGenAI({ apiKey: API_KEY }) line will throw its own error if the key is truly invalid.
+
 if (!API_KEY) { 
-    alert("System Error: Google API Key is missing. Please set the VITE_GEMINI_API_KEY environment variable.");
-    throw new Error("API Key not configured");
+    // This alert confirms the code is running and the variable is missing from the build.
+    alert("CRITICAL BUILD ERROR: API Key was not injected into the final application files by Netlify."); 
 }
+
+// Proceed to initialize the AI client. If API_KEY is undefined or bad, 
+// the new GoogleGenAI() call will fail with a more specific error,
+// which is what we want now.
+
+// Note: If you have confirmed the key is correct in Netlify, the issue is that 
+// your local build environment (or Vite) is not handling the variable substitution correctly.
 
   // We initialize the AI here (inside the function) so the app doesn't crash 
   // if the key is missing when the page first loads.
