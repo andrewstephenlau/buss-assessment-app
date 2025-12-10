@@ -5,7 +5,7 @@ export async function generateQuestionsFromText(text: string): Promise<Question[
   // !!! CRITICAL STEP !!!
   // We are telling the app to grab the key from an 'Environment Variable'
 // This is the SAFE way! (NOTE: This variable name may vary, like process.env.REACT_APP_...)
-const API_KEY = process.env.VITE_GEMINI_API_KEY; 
+const API_KEY = import.meta.env.VITE_GEMINI_API_KEY; 
 
 // Now, we only check if the variable is empty or undefined
 if (!API_KEY) { 
