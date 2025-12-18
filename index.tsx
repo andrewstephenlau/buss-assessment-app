@@ -800,26 +800,65 @@ const AssessmentRunner = ({ data, onNavigate, onComplete }: { data: any, onNavig
 const ResultsView = ({ result, assessment, onExit, onRetry }: { result: ResultLog, assessment: Assessment, onExit: () => void, onRetry: () => void }) => {
   const isPassed = result.passed;
   
+  // --- Score Calculations for Circular Ring ---
+  const scorePercentage = (result.score / result.totalQuestions) * 100;
+  const ringColorClass = isPassed ? "text-green-500" : "text-red-500";
+  const radius = 70;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (scorePercentage / 100) * circumference;
+
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Banner Section */}
       <div className={`h-48 ${isPassed ? 'bg-green-600' : 'bg-red-600'} flex items-center justify-center`}>
         <div className="text-center text-white">
-          {isPassed ? <CheckCircle size={64} className="mx-auto mb-4" /> : <XCircle size={64} className="mx-auto mb-4" />}
+          {isPassed ? <CheckCircle size={64} className="mx-auto mb-2" /> : <XCircle size={64} className="mx-auto mb-2" />}
           <h1 className="text-4xl font-extrabold">{isPassed ? 'Assessment Passed!' : 'Assessment Failed'}</h1>
-          <p className="opacity-90 mt-2">Score: {result.score} / {result.totalQuestions}</p>
         </div>
       </div>
 
       <main className="max-w-3xl mx-auto px-4 -mt-10 pb-12">
         <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
-          <div className="p-8 text-center border-b border-gray-100">
-            <p className="text-gray-600">
+          
+          {/* --- NEW: Circular Progress Ring Section --- */}
+          <div className="p-8 flex flex-col items-center border-b border-gray-100">
+            <div className="relative flex items-center justify-center mb-4">
+              <svg className="transform -rotate-90 w-48 h-48">
+                {/* Background Track */}
+                <circle
+                  cx="96" cy="96" r={radius}
+                  stroke="currentColor" strokeWidth="12"
+                  fill="transparent" className="text-gray-100"
+                />
+                {/* Dynamic Progress Ring */}
+                <circle
+                  cx="96" cy="96" r={radius}
+                  stroke="currentColor" strokeWidth="12"
+                  fill="transparent"
+                  strokeDasharray={circumference}
+                  strokeDashoffset={offset}
+                  strokeLinecap="round"
+                  className={`${ringColorClass} transition-all duration-1000 ease-out`}
+                />
+              </svg>
+              <div className="absolute flex flex-col items-center">
+                <span className={`text-3xl font-bold ${ringColorClass}`}>
+                  {result.score}/{result.totalQuestions}
+                </span>
+                <span className="text-sm text-gray-500 font-medium">
+                  {Math.round(scorePercentage)}% Correct
+                </span>
+              </div>
+            </div>
+            
+            <p className="text-gray-600 max-w-md text-center mt-2">
               {isPassed 
                 ? "Congratulations! You have demonstrated sufficient knowledge in this area." 
                 : "You did not meet the minimum requirement of 16 correct answers. Please review the material and try again."}
             </p>
           </div>
 
+          {/* Missed Questions Section (Remains the same) */}
           {result.missedQuestionIds.length > 0 && (
             <div className="bg-orange-50 p-6">
               <h3 className="text-orange-900 font-bold flex items-center gap-2 mb-4">
@@ -834,7 +873,6 @@ const ResultsView = ({ result, assessment, onExit, onRetry }: { result: ResultLo
                     <div key={item.q.id} className="bg-white p-4 rounded-lg border border-orange-100">
                       <p className="font-bold text-gray-800 mb-2">Question {item.num}: {item.q.text}</p>
                       <p className="text-sm text-red-500 font-medium">Your answer was incorrect.</p>
-                      {/* Intentional: Correct answer is NOT shown */}
                     </div>
                 ))}
               </div>
@@ -856,7 +894,6 @@ const ResultsView = ({ result, assessment, onExit, onRetry }: { result: ResultLo
     </div>
   );
 };
-
 // --- MAIN APP ROUTER ---
 
 const App = () => {
